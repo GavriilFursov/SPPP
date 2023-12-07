@@ -16,7 +16,6 @@ namespace SPPP
     {
         bool isConnected = false; // Флаг проверки подключения
 
-        
         public MainForm()
         {
             InitializeComponent();
@@ -27,11 +26,13 @@ namespace SPPP
         {
              if(!isConnected) //Проверка флага, если false, подключаемся к плате управления, если true отключаемся
             {
-                ConnectOrDisconnectToArduino(); // Функция подключения / отключения от платы управления
+                connectOrDisconnectToArduino(); // Функция подключения / отключения от платы управления
+                condition(); // Функция изменения цвета кнопки состояние подключения
             }
             else
             {
                 disconnectFromArduino(); // Функция отключения от платы управления
+                condition(); // Функция изменения цвета кнопки состояние подключения
             }
         }
 
@@ -47,15 +48,16 @@ namespace SPPP
         }
 
         // Функция подключения / отключения от платы управления
-        private void ConnectOrDisconnectToArduino()
+        private void connectOrDisconnectToArduino()
         {
             if(!isConnected) 
             {
-                string arduinoPort = DetectArduinoPort(); // Записываем порт, к которому подключена плата упраления
+                string arduinoPort = detectArduinoPort(); // Записываем порт, к которому подключена плата упраления
                 if(!string.IsNullOrEmpty(arduinoPort)) // Если плата управления обнаружена, то подлючаемся
                 {
                     isConnected = true; // Меняем флаг подключения
                     conectPort.PortName = arduinoPort; // Присваем название порта
+                    conectPort.DataReceived += new SerialDataReceivedEventHandler(dataReceivedHandler);
                     conectPort.Open(); // Открываем порт
                     buttonConnect.Text = "Отключиться"; // Меняем текст кнопки
                 }
@@ -72,8 +74,13 @@ namespace SPPP
             }
         }
 
+        private void dataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
+        {
+
+        }
+
         // Функция для обнаружения платы управления
-        private string DetectArduinoPort()
+        private string detectArduinoPort()
         {
             ManagementScope connectionScope = new ManagementScope();
             SelectQuery serialQuery = new SelectQuery("SELECT * FROM Win32_SerialPort");
@@ -96,6 +103,45 @@ namespace SPPP
 
             }
             return null;
+        }
+
+        // Кнопка информация
+        private void buttonInformation_Click(object sender, EventArgs e)
+        {
+            string message = "Прикладное программное обеспечение СППП\n" + 
+                "Версия ППО: 1.0 от 11.12.2023\n" +
+                "Разработчик: ЮЗГУ НИЛ 'МиР'\n" +
+                "Номер телефона: +7(4712)22-26-26\n" +
+                "Email: lab.swsu@gmail.com";
+
+            MessageBox.Show(message, "Информация", MessageBoxButtons.OK, MessageBoxIcon.Question);
+        }
+
+        // Функция для установки состояния видимости кнопок и их активации, в зависимости от флага.
+        private void condition()
+        {
+            if (isConnected)
+            {
+                buttonCondition.Text = "Успешное подключение"; // Меняем текст кнопки состояния
+                buttonCondition.BackColor = Color.Green; // Меняем цвет кнопки состояния
+                buttonLoad.Visible = true; // Активируем отображение кнопки загрузка
+                buttonLoad.Enabled = true; // Активируем нажатие на кнопку загрузка
+                buttonGenerateReport.Visible = true; // Активируем отображение кнопки сформировать отчет
+                buttonGenerateReport.Enabled = true; // Активируем нажатие на кнопку сформировать отчет
+                buttonInformation.Visible = false; // Деактивируем визуальное отображение кнопки информация
+                buttonInformation.Enabled = false; // Деактивируем нажатие на кнопку информация
+            }
+            else
+            { 
+                buttonCondition.Text = "Нет подключения"; // Меняем текст кнопки состояния
+                buttonCondition.BackColor = Color.Red; // Меняем цвет кнопки состояния
+                buttonLoad.Visible = false; // Активируем отображение кнопки загрузка
+                buttonLoad.Enabled = false; // Активируем нажатие на кнопку загрузка
+                buttonGenerateReport.Visible = false; // Активируем отображение кнопки сформировать отчет
+                buttonGenerateReport.Enabled = false; // Активируем нажатие на кнопку сформировать отчет
+                buttonInformation.Visible = true; // Деактивируем визуальное отображение кнопки информация
+                buttonInformation.Enabled = true; // Деактивируем нажатие на кнопку информация
+            }
         }
     }
 }
