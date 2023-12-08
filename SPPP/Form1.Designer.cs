@@ -93,6 +93,7 @@
             this.buttonLoad.Text = "Загрузка";
             this.buttonLoad.UseVisualStyleBackColor = true;
             this.buttonLoad.Visible = false;
+            this.buttonLoad.Click += new System.EventHandler(this.buttonLoad_Click);
             // 
             // buttonGenerateReport
             // 
@@ -113,6 +114,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(290, 31);
             this.textBox1.TabIndex = 7;
+            this.textBox1.Visible = false;
             // 
             // label1
             // 
@@ -123,6 +125,7 @@
             this.label1.Size = new System.Drawing.Size(222, 21);
             this.label1.TabIndex = 8;
             this.label1.Text = "Серийный номер изделия:";
+            this.label1.Visible = false;
             // 
             // label2
             // 
@@ -133,6 +136,7 @@
             this.label2.Size = new System.Drawing.Size(271, 21);
             this.label2.TabIndex = 10;
             this.label2.Text = "Продолжительность испытаний:";
+            this.label2.Visible = false;
             // 
             // textBox2
             // 
@@ -141,6 +145,7 @@
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(290, 31);
             this.textBox2.TabIndex = 9;
+            this.textBox2.Visible = false;
             // 
             // label3
             // 
@@ -151,6 +156,7 @@
             this.label3.Size = new System.Drawing.Size(264, 21);
             this.label3.TabIndex = 12;
             this.label3.Text = "Количество циклов испытаний:";
+            this.label3.Visible = false;
             // 
             // textBox3
             // 
@@ -159,11 +165,11 @@
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(290, 31);
             this.textBox3.TabIndex = 11;
+            this.textBox3.Visible = false;
             // 
             // MainForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(884, 521);
@@ -178,6 +184,7 @@
             this.Controls.Add(this.buttonCondition);
             this.Controls.Add(this.buttonInformation);
             this.Controls.Add(this.buttonConnect);
+            this.Font = new System.Drawing.Font("Times New Roman", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

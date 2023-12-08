@@ -15,6 +15,8 @@ namespace SPPP
     public partial class MainForm : Form
     {
         bool isConnected = false; // Флаг проверки подключения
+        bool isDetermininingOfStand = false; // Флаг проверки типа стенда
+        bool isLoadData = false; // Флаг проверки загрузки
 
         public MainForm()
         {
@@ -24,7 +26,7 @@ namespace SPPP
         // Кнопка подключиться
         private void buttonConnect_Click(object sender, EventArgs e)
         {
-             if(!isConnected) //Проверка флага, если false, подключаемся к плате управления, если true отключаемся
+             if(!isConnected) // Проверка флага, если false, подключаемся к плате управления, если true отключаемся
             {
                 connectOrDisconnectToArduino(); // Функция подключения / отключения от платы управления
                 condition(); // Функция изменения цвета кнопки состояние подключения
@@ -42,6 +44,7 @@ namespace SPPP
             if(isConnected)
             {
                 isConnected = false; // Меняем флаг
+                isDetermininingOfStand = false; // 
                 conectPort.Close(); // Закрываем порт
                 buttonConnect.Text = "Подключиться"; // Меняем текст кнопки
             }
@@ -57,8 +60,9 @@ namespace SPPP
                 {
                     isConnected = true; // Меняем флаг подключения
                     conectPort.PortName = arduinoPort; // Присваем название порта
-                    conectPort.DataReceived += new SerialDataReceivedEventHandler(dataReceivedHandler);
+                    conectPort.DataReceived += new SerialDataReceivedEventHandler(dataReceivedHandler); // Делегат
                     conectPort.Open(); // Открываем порт
+                    conectPort.Write("0");
                     buttonConnect.Text = "Отключиться"; // Меняем текст кнопки
                 }
                 // Если плата управления не обнаружена
@@ -74,9 +78,84 @@ namespace SPPP
             }
         }
 
+
         private void dataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
         {
+            if (!isDetermininingOfStand)
+            {
+                if (conectPort.BytesToRead > 0)
+                {
+                    int flag = conectPort.ReadChar();
+                    if(flag == '1') // SRPP
+                    {
+                        label1.Invoke(new System.Action(() =>
+                        {
+                            label1.Visible = true;
+                            label2.Visible = true;
+                            label3.Visible = true;
+                            label1.Text = "Серийный номер изделия:";
+                            label2.Text = "Продолжительность испытания:";
+                            label3.Text = "Количество циклов испытания:";
+                            textBox1.Visible = true;
+                            textBox2.Visible = true;
+                            textBox3.Visible = true;
+                        }));
 
+                        isDetermininingOfStand = true;
+                    }
+                    if(flag == '2') // SPPP
+                    {
+                        label1.Invoke(new System.Action(() =>
+                        {
+                            label1.Visible = true;
+                            label2.Visible = true;
+                            label3.Visible = true;
+                            label1.Text = "Zalupa";
+                            label2.Text = "Anus";
+                            label3.Text = "Chlen";
+                            textBox1.Visible = true;
+                            textBox2.Visible = true;
+                            textBox3.Visible = true;
+                        }));
+
+                        isDetermininingOfStand = true;
+                    }
+                    if(flag == '3')
+                    {
+                        label1.Invoke(new System.Action(() =>
+                        {
+                            label1.Visible = true;
+                            label2.Visible = true;
+                            label3.Visible = true;
+                            label1.Text = "Zalupa";
+                            label2.Text = "Anus";
+                            label3.Text = "Chlen";
+                            textBox1.Visible = true;
+                            textBox2.Visible = true;
+                            textBox3.Visible = true;
+                        }));
+
+                        isDetermininingOfStand = true;
+                    }
+                    if(flag == '4')
+                    {
+                        label1.Invoke(new System.Action(() =>
+                        {
+                            label1.Visible = true;
+                            label2.Visible = true;
+                            label3.Visible = true;
+                            label1.Text = "Zalupa";
+                            label2.Text = "Anus";
+                            label3.Text = "Chlen";
+                            textBox1.Visible = true;
+                            textBox2.Visible = true;
+                            textBox3.Visible = true;
+                        }));
+
+                        isDetermininingOfStand = true;
+                    }
+                }
+            }
         }
 
         // Функция для обнаружения платы управления
@@ -141,7 +220,18 @@ namespace SPPP
                 buttonGenerateReport.Enabled = false; // Активируем нажатие на кнопку сформировать отчет
                 buttonInformation.Visible = true; // Деактивируем визуальное отображение кнопки информация
                 buttonInformation.Enabled = true; // Деактивируем нажатие на кнопку информация
+                label1.Visible = false; 
+                label2.Visible = false;
+                label3.Visible = false;
+                textBox1.Visible = false;
+                textBox2.Visible = false;
+                textBox3.Visible = false;
             }
+        }
+
+        private void buttonLoad_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
