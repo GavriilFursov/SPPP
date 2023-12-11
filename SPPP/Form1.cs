@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO.Ports;
 using System.Management;
+using System.Threading;
 
 namespace SPPP
 {
@@ -17,6 +18,11 @@ namespace SPPP
         bool isConnected = false; // Флаг проверки подключения
         bool isDetermininingOfStand = false; // Флаг проверки типа стенда
         bool isLoadData = false; // Флаг проверки загрузки
+        bool isReadingData = false;
+
+        private byte[] sensorData = new byte[3];
+        private byte startMarker = 0xA0;
+        private byte endMarker = 0xC0;
 
         public MainForm()
         {
@@ -62,7 +68,8 @@ namespace SPPP
                     conectPort.PortName = arduinoPort; // Присваем название порта
                     conectPort.DataReceived += new SerialDataReceivedEventHandler(dataReceivedHandler); // Делегат
                     conectPort.Open(); // Открываем порт
-                    conectPort.Write("0");
+                    Thread.Sleep(1000) ;
+                    conectPort.WriteLine("Start");
                     buttonConnect.Text = "Отключиться"; // Меняем текст кнопки
                 }
                 // Если плата управления не обнаружена
@@ -85,8 +92,8 @@ namespace SPPP
             {
                 if (conectPort.BytesToRead > 0)
                 {
-                    int flag = conectPort.ReadChar();
-                    if(flag == '1') // SRPP
+                    String flag = conectPort.ReadLine();
+                    if (flag.Trim().Equals("SRPP")) // SRPP
                     {
                         label1.Invoke(new System.Action(() =>
                         {
@@ -103,7 +110,7 @@ namespace SPPP
 
                         isDetermininingOfStand = true;
                     }
-                    if(flag == '2') // SPPP
+                    if(flag.Trim().Equals("SPPP")) // SPPP
                     {
                         label1.Invoke(new System.Action(() =>
                         {
@@ -120,7 +127,7 @@ namespace SPPP
 
                         isDetermininingOfStand = true;
                     }
-                    if(flag == '3')
+                    if(flag.Trim().Equals(" "))
                     {
                         label1.Invoke(new System.Action(() =>
                         {
@@ -137,7 +144,7 @@ namespace SPPP
 
                         isDetermininingOfStand = true;
                     }
-                    if(flag == '4')
+                    if(flag.Trim().Equals(" "))
                     {
                         label1.Invoke(new System.Action(() =>
                         {
@@ -153,6 +160,49 @@ namespace SPPP
                         }));
 
                         isDetermininingOfStand = true;
+                    }
+                }
+            }
+            if (isLoadData)
+            {
+                while (conectPort.BytesToRead > 0)
+                {
+                    byte receivedByte = (byte)conectPort.ReadByte();
+
+                    if (!isReadingData && receivedByte == startMarker)
+                    {
+                        isReadingData = true;
+
+                        for (int i = 0; i < 3; i++)
+                        {
+                            sensorData[i] = (byte)conectPort.ReadByte();
+                        }
+                    }
+                    else if (isReadingData && receivedByte == endMarker)
+                    {
+                        MessageBox.Show("Данные успешно получены");
+                        string one = sensorData[0].ToString();
+                        string two = sensorData[1].ToString();
+                        string three = sensorData[2].ToString();
+
+                        textBox1.Invoke(new System.Action(() =>
+                        {
+                            buttonCondition.Text = "Данные получены";
+                            buttonLoad.Visible = true;
+                            buttonLoad.Enabled = true;
+                            textBox1.Text = one;
+                            textBox2.Text = two;
+                            textBox3.Text = three;
+                            buttonGenerateReport.Visible = true;
+                            buttonGenerateReport.Enabled = true;
+                        }));
+
+                        isReadingData = false; 
+                        isLoadData = false;
+                    }
+                    else if (isReadingData && receivedByte != endMarker)
+                    {
+                        MessageBox.Show("Данные повреждены");
                     }
                 }
             }
@@ -205,8 +255,8 @@ namespace SPPP
                 buttonCondition.BackColor = Color.Green; // Меняем цвет кнопки состояния
                 buttonLoad.Visible = true; // Активируем отображение кнопки загрузка
                 buttonLoad.Enabled = true; // Активируем нажатие на кнопку загрузка
-                buttonGenerateReport.Visible = true; // Активируем отображение кнопки сформировать отчет
-                buttonGenerateReport.Enabled = true; // Активируем нажатие на кнопку сформировать отчет
+                //buttonGenerateReport.Visible = true; // Активируем отображение кнопки сформировать отчет
+                //buttonGenerateReport.Enabled = true; // Активируем нажатие на кнопку сформировать отчет
                 buttonInformation.Visible = false; // Деактивируем визуальное отображение кнопки информация
                 buttonInformation.Enabled = false; // Деактивируем нажатие на кнопку информация
             }
@@ -228,10 +278,33 @@ namespace SPPP
                 textBox3.Visible = false;
             }
         }
-
         private void buttonLoad_Click(object sender, EventArgs e)
         {
+            if (!isLoadData)
+            {
+                conectPort.WriteLine("Load");
+                isLoadData = true;
+            }
+        }
 
+        private void buttonGenerateReport_Click(object sender, EventArgs e)
+        {
+            saveFileDialog1 = new SaveFileDialog();
+            saveFileDialog1.Filter = "Word document|*.docx";
+            saveFileDialog1.Title = "Выберите путь сохранения";
+            if (DialogResult.OK == saveFileDialog1.ShowDialog())
+            {
+                string location = saveFileDialog1.FileName;
+                WordHelper helper = new WordHelper();
+                if (helper.WordTemplate(DateTime.Now.ToString(), textBox1.Text, textBox2.Text, textBox3.Text, location))
+                {
+                    MessageBox.Show("Отчёт сформирован");
+                }
+                else
+                {
+                    MessageBox.Show("Что-то пошло не так. Повторите попытку");
+                }
+            }
         }
     }
 }

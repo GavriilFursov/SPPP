@@ -8,3 +8,4 @@ C:\Users\tsuki\source\repos\SPPP\SPPP\obj\Debug\SPPP.csproj.GenerateResource.cac
 C:\Users\tsuki\source\repos\SPPP\SPPP\obj\Debug\SPPP.csproj.CoreCompileInputs.cache
 C:\Users\tsuki\source\repos\SPPP\SPPP\obj\Debug\SPPP.exe
 C:\Users\tsuki\source\repos\SPPP\SPPP\obj\Debug\SPPP.pdb
+C:\Users\tsuki\source\repos\SPPP\SPPP\obj\Debug\SPPP.csproj.ResolveComReference.cache

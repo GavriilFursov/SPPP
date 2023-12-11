@@ -41,6 +41,7 @@
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.textBox3 = new System.Windows.Forms.TextBox();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.SuspendLayout();
             // 
             // buttonConnect
@@ -106,6 +107,7 @@
             this.buttonGenerateReport.Text = "Сформировать отчёт";
             this.buttonGenerateReport.UseVisualStyleBackColor = true;
             this.buttonGenerateReport.Visible = false;
+            this.buttonGenerateReport.Click += new System.EventHandler(this.buttonGenerateReport_Click);
             // 
             // textBox1
             // 
@@ -208,6 +210,7 @@
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
     }
 }
 
