@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Office.Interop.Word;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,32 +11,33 @@ namespace SPPP
 {
     internal class WordHelper
     {
-        public bool WordTemplate(string date, string model, string time, string accuransy, string location)
+        public bool WordTemplate(string date, string model, string durationOfTheTests, string numberOfTestCyclec, string location, string typeOfStand)
         {
             Word.Document doc = null;
-            string patch = Application.StartupPath.ToString() + "\\Шаблон.docx";
-            try
+            if (typeOfStand.Trim().Equals("SRPP"))
             {
-                Word._Application app = new Word.Application();
-                doc = app.Documents.Open(patch);
+                string patch = System.Windows.Forms.Application.StartupPath.ToString() + "\\ШаблонСРПП.docx";
+                try
+                {
+                    Word._Application app = new Word.Application();
+                    doc = app.Documents.Open(patch);
+                    doc.Activate();
+                    doc.Bookmarks["numberOfTestCyclec"].Range.Text = "Количество выполненных испытаний: " + numberOfTestCyclec;
+                    doc.Bookmarks["durationOfTheTests"].Range.Text = "Продолжительность испытания: " + durationOfTheTests + "\n";
+                    doc.Bookmarks["model"].Range.Text = "Серийный номер изделия: " + model + "\n";
+                    doc.Bookmarks["dateTime"].Range.Text = "Время составления отчета: " + date + "\n";
 
-                doc.Activate();
-
-                doc.Bookmarks["dateTime"].Range.Text = date;
-                doc.Bookmarks["accurancy"].Range.Text = accuransy;
-                doc.Bookmarks["caliTime"].Range.Text = time;
-                doc.Bookmarks["model"].Range.Text = model;
-
-                doc.SaveAs(location);
-                doc.Close();
-                return true;
-
+                    doc.SaveAs(location);
+                    doc.Close();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return false;
+                }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-                return false;
-            }
+            return false;
         }
     }
 }

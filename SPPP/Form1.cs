@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.IO.Ports;
 using System.Management;
 using System.Threading;
+using Microsoft.Office.Interop.Word;
 
 namespace SPPP
 {
@@ -19,8 +20,9 @@ namespace SPPP
         bool isDetermininingOfStand = false; // Флаг проверки типа стенда
         bool isLoadData = false; // Флаг проверки загрузки
         bool isReadingData = false;
+        public string typeOfStand;
 
-        private byte[] sensorData = new byte[3];
+        private byte[] sensorData = new byte[2];
         private byte startMarker = 0xA0;
         private byte endMarker = 0xC0;
 
@@ -53,6 +55,9 @@ namespace SPPP
                 isDetermininingOfStand = false; // 
                 conectPort.Close(); // Закрываем порт
                 buttonConnect.Text = "Подключиться"; // Меняем текст кнопки
+                textBox1.Text = null;
+                textBox2.Text = null;
+                textBox3.Text = null;
             }
         }
 
@@ -85,14 +90,14 @@ namespace SPPP
             }
         }
 
-
         private void dataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
         {
             if (!isDetermininingOfStand)
             {
                 if (conectPort.BytesToRead > 0)
                 {
-                    String flag = conectPort.ReadLine();
+                    string flag = conectPort.ReadLine();
+                    typeOfStand = flag;
                     if (flag.Trim().Equals("SRPP")) // SRPP
                     {
                         label1.Invoke(new System.Action(() =>
@@ -107,7 +112,6 @@ namespace SPPP
                             textBox2.Visible = true;
                             textBox3.Visible = true;
                         }));
-
                         isDetermininingOfStand = true;
                     }
                     if(flag.Trim().Equals("SPPP")) // SPPP
@@ -124,7 +128,6 @@ namespace SPPP
                             textBox2.Visible = true;
                             textBox3.Visible = true;
                         }));
-
                         isDetermininingOfStand = true;
                     }
                     if(flag.Trim().Equals(" "))
@@ -141,7 +144,6 @@ namespace SPPP
                             textBox2.Visible = true;
                             textBox3.Visible = true;
                         }));
-
                         isDetermininingOfStand = true;
                     }
                     if(flag.Trim().Equals(" "))
@@ -158,7 +160,6 @@ namespace SPPP
                             textBox2.Visible = true;
                             textBox3.Visible = true;
                         }));
-
                         isDetermininingOfStand = true;
                     }
                 }
@@ -173,7 +174,7 @@ namespace SPPP
                     {
                         isReadingData = true;
 
-                        for (int i = 0; i < 3; i++)
+                        for (int i = 0; i < 2; i++)
                         {
                             sensorData[i] = (byte)conectPort.ReadByte();
                         }
@@ -183,24 +184,21 @@ namespace SPPP
                         MessageBox.Show("Данные успешно получены");
                         string one = sensorData[0].ToString();
                         string two = sensorData[1].ToString();
-                        string three = sensorData[2].ToString();
 
                         textBox1.Invoke(new System.Action(() =>
                         {
                             buttonCondition.Text = "Данные получены";
                             buttonLoad.Visible = true;
                             buttonLoad.Enabled = true;
-                            textBox1.Text = one;
-                            textBox2.Text = two;
-                            textBox3.Text = three;
+                            textBox2.Text = one;
+                            textBox3.Text = two;
                             buttonGenerateReport.Visible = true;
                             buttonGenerateReport.Enabled = true;
                         }));
-
-                        isReadingData = false; 
+                         isReadingData = false; 
                         isLoadData = false;
                     }
-                    else if (isReadingData && receivedByte != endMarker)
+                    else if (!isReadingData && receivedByte != endMarker)
                     {
                         MessageBox.Show("Данные повреждены");
                     }
@@ -289,20 +287,27 @@ namespace SPPP
 
         private void buttonGenerateReport_Click(object sender, EventArgs e)
         {
-            saveFileDialog1 = new SaveFileDialog();
-            saveFileDialog1.Filter = "Word document|*.docx";
-            saveFileDialog1.Title = "Выберите путь сохранения";
-            if (DialogResult.OK == saveFileDialog1.ShowDialog())
+            if (string.IsNullOrEmpty(textBox1.Text))
             {
-                string location = saveFileDialog1.FileName;
-                WordHelper helper = new WordHelper();
-                if (helper.WordTemplate(DateTime.Now.ToString(), textBox1.Text, textBox2.Text, textBox3.Text, location))
+                MessageBox.Show("Введите серийный номер изделия");
+            }
+            else
+            {
+                saveFileDialog1 = new SaveFileDialog();
+                saveFileDialog1.Filter = "Word document|*.docx";
+                saveFileDialog1.Title = "Выберите путь сохранения";
+                if (DialogResult.OK == saveFileDialog1.ShowDialog())
                 {
-                    MessageBox.Show("Отчёт сформирован");
-                }
-                else
-                {
-                    MessageBox.Show("Что-то пошло не так. Повторите попытку");
+                    string location = saveFileDialog1.FileName;
+                    WordHelper helper = new WordHelper();
+                    if (helper.WordTemplate(DateTime.Now.ToString(), textBox1.Text, textBox2.Text, textBox3.Text, location, typeOfStand))
+                    {
+                        MessageBox.Show("Отчёт сформирован");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Что-то пошло не так. Повторите попытку");
+                    }
                 }
             }
         }
