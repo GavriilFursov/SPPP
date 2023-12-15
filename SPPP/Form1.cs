@@ -11,6 +11,7 @@ using System.IO.Ports;
 using System.Management;
 using System.Threading;
 using Microsoft.Office.Interop.Word;
+using System.Timers;
 
 namespace SPPP
 {
@@ -53,11 +54,12 @@ namespace SPPP
             {
                 isConnected = false; // Меняем флаг
                 isDetermininingOfStand = false; // 
-                conectPort.Close(); // Закрываем порт
+                connectPort.Close(); // Закрываем порт
                 buttonConnect.Text = "Подключиться"; // Меняем текст кнопки
+                Thread.Sleep(1000);
                 textBox1.Text = null;
                 textBox2.Text = null;
-                textBox3.Text = null;
+                textBox3.Text = null;   
             }
         }
 
@@ -70,17 +72,17 @@ namespace SPPP
                 if(!string.IsNullOrEmpty(arduinoPort)) // Если плата управления обнаружена, то подлючаемся
                 {
                     isConnected = true; // Меняем флаг подключения
-                    conectPort.PortName = arduinoPort; // Присваем название порта
-                    conectPort.DataReceived += new SerialDataReceivedEventHandler(dataReceivedHandler); // Делегат
-                    conectPort.Open(); // Открываем порт
-                    Thread.Sleep(1000) ;
-                    conectPort.WriteLine("Start");
+                    connectPort.PortName = arduinoPort; // Присваем название порта
+                    connectPort.DataReceived += new SerialDataReceivedEventHandler(dataReceivedHandler); // Делегат
+                    connectPort.Open(); // Открываем порт
+                    Thread.Sleep(2000);
+                    connectPort.WriteLine("Start");
                     buttonConnect.Text = "Отключиться"; // Меняем текст кнопки
                 }
                 // Если плата управления не обнаружена
                 else
                 {
-                    MessageBox.Show("Плата управления не обнаружена. Убедитесь, что она подключена.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Плата управления не обнаружена. Убедитесь, что она подключена.");
                 }
             }
             // Если флаг подключения true, отключаемся
@@ -92,11 +94,12 @@ namespace SPPP
 
         private void dataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
         {
+
             if (!isDetermininingOfStand)
             {
-                if (conectPort.BytesToRead > 0)
+                if (connectPort.BytesToRead > 0)
                 {
-                    string flag = conectPort.ReadLine();
+                    string flag = connectPort.ReadLine();
                     typeOfStand = flag;
                     if (flag.Trim().Equals("SRPP")) // SRPP
                     {
@@ -166,9 +169,9 @@ namespace SPPP
             }
             if (isLoadData)
             {
-                while (conectPort.BytesToRead > 0)
+                while (connectPort.BytesToRead > 0)
                 {
-                    byte receivedByte = (byte)conectPort.ReadByte();
+                    byte receivedByte = (byte)connectPort.ReadByte();
 
                     if (!isReadingData && receivedByte == startMarker)
                     {
@@ -176,7 +179,7 @@ namespace SPPP
 
                         for (int i = 0; i < 2; i++)
                         {
-                            sensorData[i] = (byte)conectPort.ReadByte();
+                            sensorData[i] = (byte)connectPort.ReadByte();
                         }
                     }
                     else if (isReadingData && receivedByte == endMarker)
@@ -196,11 +199,15 @@ namespace SPPP
                             buttonGenerateReport.Enabled = true;
                         }));
                          isReadingData = false; 
-                        isLoadData = false;
+                         isLoadData = false;
                     }
                     else if (!isReadingData && receivedByte != endMarker)
                     {
-                        MessageBox.Show("Данные повреждены");
+                        MessageBox.Show("Данные повреждены.");
+                    }
+                    else if (!connectPort.IsOpen)
+                    {
+                        MessageBox.Show("Потеряно соединение.");
                     }
                 }
             }
@@ -262,7 +269,7 @@ namespace SPPP
             { 
                 buttonCondition.Text = "Нет подключения"; // Меняем текст кнопки состояния
                 buttonCondition.BackColor = Color.Red; // Меняем цвет кнопки состояния
-                buttonLoad.Visible = false; // Активируем отображение кнопки загрузка
+                buttonLoad.Visible = false; // Активируем отображение кнопки загрузка 
                 buttonLoad.Enabled = false; // Активируем нажатие на кнопку загрузка
                 buttonGenerateReport.Visible = false; // Активируем отображение кнопки сформировать отчет
                 buttonGenerateReport.Enabled = false; // Активируем нажатие на кнопку сформировать отчет
@@ -280,16 +287,31 @@ namespace SPPP
         {
             if (!isLoadData)
             {
-                conectPort.WriteLine("Load");
-                isLoadData = true;
+                if (!connectPort.IsOpen)
+                {
+                    MessageBox.Show("Проверьте подключения стенда.");
+                    disconnectFromArduino();
+                    condition();
+                }
+                else
+                {
+                    connectPort.WriteLine("Load");
+                    isLoadData = true;
+                }
             }
         }
 
         private void buttonGenerateReport_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(textBox1.Text))
+            if (!connectPort.IsOpen)
             {
-                MessageBox.Show("Введите серийный номер изделия");
+                MessageBox.Show("Проверьте подключения стенда.");
+                disconnectFromArduino();
+                condition();
+            }
+            else if (string.IsNullOrEmpty(textBox1.Text))
+            {
+                MessageBox.Show("Введите серийный номер изделия.");
             }
             else
             {
@@ -306,7 +328,7 @@ namespace SPPP
                     }
                     else
                     {
-                        MessageBox.Show("Что-то пошло не так. Повторите попытку");
+                        MessageBox.Show("Что-то пошло не так. Повторите попытку.");
                     }
                 }
             }

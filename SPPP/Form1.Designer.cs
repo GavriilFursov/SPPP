@@ -30,7 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.buttonConnect = new System.Windows.Forms.Button();
-            this.conectPort = new System.IO.Ports.SerialPort(this.components);
+            this.connectPort = new System.IO.Ports.SerialPort(this.components);
             this.buttonInformation = new System.Windows.Forms.Button();
             this.buttonCondition = new System.Windows.Forms.Button();
             this.buttonLoad = new System.Windows.Forms.Button();
@@ -55,9 +55,9 @@
             this.buttonConnect.UseVisualStyleBackColor = true;
             this.buttonConnect.Click += new System.EventHandler(this.buttonConnect_Click);
             // 
-            // conectPort
+            // connectPort
             // 
-            this.conectPort.BaudRate = 115200;
+            this.connectPort.BaudRate = 115200;
             // 
             // buttonInformation
             // 
@@ -199,7 +199,7 @@
         #endregion
 
         private System.Windows.Forms.Button buttonConnect;
-        private System.IO.Ports.SerialPort conectPort;
+        private System.IO.Ports.SerialPort connectPort;
         private System.Windows.Forms.Button buttonInformation;
         private System.Windows.Forms.Button buttonCondition;
         private System.Windows.Forms.Button buttonLoad;
