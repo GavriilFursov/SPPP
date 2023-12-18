@@ -197,7 +197,7 @@
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Система формирования отчетной документации СППП";
+            this.Text = "Система формирования отчетной документации";
             this.ResumeLayout(false);
             this.PerformLayout();
 

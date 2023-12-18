@@ -134,9 +134,9 @@ namespace SPPP
                                     label1.Visible = true;
                                     label2.Visible = true;
                                     label3.Visible = true;
-                                    label1.Text = "Zalupa";
-                                    label2.Text = "Anus";
-                                    label3.Text = "Chlen";
+                                    label1.Text = "Серийный номер изделия:";
+                                    label2.Text = "Продолжительность испытания:";
+                                    label3.Text = "Количество циклов испытания:";
                                     textBox1.Visible = true;
                                     textBox2.Visible = true;
                                     textBox3.Visible = true;
@@ -146,9 +146,9 @@ namespace SPPP
                                     label1.Visible = true;
                                     label2.Visible = true;
                                     label3.Visible = true;
-                                    label1.Text = "Zalupa";
-                                    label2.Text = "Anus";
-                                    label3.Text = "Chlen";
+                                    label1.Text = "Серийный номер изделия:";
+                                    label2.Text = "Продолжительность испытания:";
+                                    label3.Text = "Количество циклов испытания:";
                                     textBox1.Visible = true;
                                     textBox2.Visible = true;
                                     textBox3.Visible = true;
@@ -158,9 +158,9 @@ namespace SPPP
                                     label1.Visible = true;
                                     label2.Visible = true;
                                     label3.Visible = true;
-                                    label1.Text = "Zalupa";
-                                    label2.Text = "Anus";
-                                    label3.Text = "Chlen";
+                                    label1.Text = "Серийный номер изделия:";
+                                    label2.Text = "Продолжительность испытания:";
+                                    label3.Text = "Количество циклов испытания:";
                                     textBox1.Visible = true;
                                     textBox2.Visible = true;
                                     textBox3.Visible = true;
@@ -239,13 +239,7 @@ namespace SPPP
                             string one = sensorData[0].ToString();
                             string two = sensorData[1].ToString();
 
-                            if (two == "0")
-                            {
-                                MessageBox.Show("Калибровка не выполнена");
-                                isReadingData = false;
-                                isLoadData = false;
-                            }
-                            if (one == "0")
+                            if (two == "0" || one == "0")
                             {
                                 MessageBox.Show("Калибровка не выполнена");
                                 isReadingData = false;
