@@ -14,7 +14,7 @@ namespace SPPP
         public bool WordTemplate(string date, string model, string durationOfTheTests, string numberOfTestCyclec, string location, string typeOfStand)
         {
             Word.Document doc = null;
-            if (typeOfStand.Trim().Equals("SRPP"))
+            if (typeOfStand.Trim().Equals("0"))
             {
                 string patch = System.Windows.Forms.Application.StartupPath.ToString() + "\\ШаблонСРПП.docx";
                 try
@@ -22,10 +22,10 @@ namespace SPPP
                     Word._Application app = new Word.Application();
                     doc = app.Documents.Open(patch);
                     doc.Activate();
-                    doc.Bookmarks["numberOfTestCyclec"].Range.Text = "Количество выполненных испытаний: " + numberOfTestCyclec;
-                    doc.Bookmarks["durationOfTheTests"].Range.Text = "Продолжительность испытания: " + durationOfTheTests + "\n";
-                    doc.Bookmarks["model"].Range.Text = "Серийный номер изделия: " + model + "\n";
-                    doc.Bookmarks["dateTime"].Range.Text = "Время составления отчета: " + date + "\n";
+                    doc.Bookmarks["numberOfTestCyclec"].Range.Text = numberOfTestCyclec;
+                    doc.Bookmarks["durationOfTheTests"].Range.Text = durationOfTheTests;
+                    doc.Bookmarks["model"].Range.Text = model;
+                    doc.Bookmarks["dateTime"].Range.Text = date;
 
                     doc.SaveAs(location);
                     doc.Close();
