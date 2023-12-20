@@ -40,6 +40,8 @@ namespace SPPP
             timer1.Stop();
             isLoadData = false;
             isReadingData = false;
+            disconnectFromArduino();
+            condition();
             MessageBox.Show("Превышено время ожидания пакета, проверьте соединение со стендом");
         }
 
@@ -112,6 +114,7 @@ namespace SPPP
                     {
                         for (int i = 0; i < 20; i++)
                         {
+                            Thread.Sleep(1000);
                             connectPort.WriteLine(startWord);
                             if (connectPort.BytesToRead > 0)
                             {
@@ -128,6 +131,7 @@ namespace SPPP
                                     textBox1.Visible = true;
                                     textBox2.Visible = true;
                                     textBox3.Visible = true;
+                                    labelTypeOfStand.Text = "СРПП";
                                 }
                                 else if (flag.Trim().Equals("1"))
                                 {
@@ -140,6 +144,7 @@ namespace SPPP
                                     textBox1.Visible = true;
                                     textBox2.Visible = true;
                                     textBox3.Visible = true;
+                                    labelTypeOfStand.Text = "СППП";
                                 }
                                 else if (flag.Trim().Equals("2"))
                                 {
@@ -152,6 +157,7 @@ namespace SPPP
                                     textBox1.Visible = true;
                                     textBox2.Visible = true;
                                     textBox3.Visible = true;
+                                    labelTypeOfStand.Text = "СРСП";
                                 }
                                 else if (flag.Trim().Equals("3"))
                                 {
@@ -164,6 +170,7 @@ namespace SPPP
                                     textBox1.Visible = true;
                                     textBox2.Visible = true;
                                     textBox3.Visible = true;
+                                    labelTypeOfStand.Text = "СПСП";
                                 }
                                 connectPort.Close();
                                 return port;
@@ -198,6 +205,7 @@ namespace SPPP
                 //buttonGenerateReport.Enabled = true; // Активируем нажатие на кнопку сформировать отчет
                 buttonInformation.Visible = false; // Деактивируем визуальное отображение кнопки информация
                 buttonInformation.Enabled = false; // Деактивируем нажатие на кнопку информация
+                labelTypeOfStand.Visible = true;
             }
             else
             {
@@ -215,6 +223,7 @@ namespace SPPP
                 textBox1.Visible = false;
                 textBox2.Visible = false;
                 textBox3.Visible = false;
+                labelTypeOfStand.Visible = false;
             }
         }
         //System.InvalidOperationException
@@ -236,30 +245,33 @@ namespace SPPP
                             {
                                 sensorData[i] = (byte)connectPort.ReadByte();
                             }
+                        }
+                        else if (isReadingData && receivedByte == endMarker)
+                        {
+                            timer1.Stop();
+
                             string one = sensorData[0].ToString();
                             string two = sensorData[1].ToString();
+                            int time = int.Parse(one);
+                            int hour = time / 3600;
+                            int minute = (time % 3600) / 60;
+                            int seconds = time % 60;
 
                             if (two == "0" || one == "0")
                             {
                                 MessageBox.Show("Калибровка не выполнена");
                                 isReadingData = false;
                                 isLoadData = false;
+                                return;
                             }
-                        }
-                        else if (isReadingData && receivedByte == endMarker)
-                        {
-                            timer1.Stop();
                             MessageBox.Show("Данные успешно получены");
-
-                            string one = sensorData[0].ToString();
-                            string two = sensorData[1].ToString();
 
                             textBox1.Invoke(new System.Action(() =>
                             {
                                 buttonCondition.Text = "Данные получены";
                                 buttonLoad.Visible = true;
                                 buttonLoad.Enabled = true;
-                                textBox2.Text = one;
+                                textBox2.Text = hour + ":" + minute + ":" + seconds;
                                 textBox3.Text = two;
                                 buttonGenerateReport.Visible = true;
                                 buttonGenerateReport.Enabled = true;
@@ -273,7 +285,7 @@ namespace SPPP
                         }
                     }
                 }
-                catch(InvalidOperationException)
+                catch (InvalidOperationException)
                 {
                     MessageBox.Show("Потеряно соединение.");
                 }
@@ -283,8 +295,8 @@ namespace SPPP
         // Кнопка информация
         private void buttonInformation_Click(object sender, EventArgs e)
         {
-            string message = "Прикладное программное обеспечение СППП\n" + 
-                "Версия ППО: 1.0 от 11.12.2023\n" +
+            string message = "Прикладное программное обеспечение СППП\n" +
+                "Версия ППО: 1.0 от 20.12.2023\n" +
                 "Разработчик: ЮЗГУ НИЛ 'МиР'\n" +
                 "Номер телефона: +7(4712)22-26-26\n" +
                 "Email: lab.swsu@gmail.com";

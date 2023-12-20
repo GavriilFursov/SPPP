@@ -44,6 +44,7 @@
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.labelTypeOfStand = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // buttonConnect
@@ -175,12 +176,22 @@
             // 
             this.timer1.Interval = 1000;
             // 
+            // labelTypeOfStand
+            // 
+            this.labelTypeOfStand.AutoSize = true;
+            this.labelTypeOfStand.Location = new System.Drawing.Point(401, 61);
+            this.labelTypeOfStand.Name = "labelTypeOfStand";
+            this.labelTypeOfStand.Size = new System.Drawing.Size(0, 21);
+            this.labelTypeOfStand.TabIndex = 13;
+            this.labelTypeOfStand.Visible = false;
+            // 
             // MainForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(884, 521);
+            this.Controls.Add(this.labelTypeOfStand);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textBox3);
             this.Controls.Add(this.label2);
@@ -219,6 +230,7 @@
         private System.Windows.Forms.TextBox textBox3;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Label labelTypeOfStand;
     }
 }
 
