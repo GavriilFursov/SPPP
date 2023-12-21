@@ -33,7 +33,6 @@
             this.buttonConnect = new System.Windows.Forms.Button();
             this.connectPort = new System.IO.Ports.SerialPort(this.components);
             this.buttonInformation = new System.Windows.Forms.Button();
-            this.buttonCondition = new System.Windows.Forms.Button();
             this.buttonLoad = new System.Windows.Forms.Button();
             this.buttonGenerateReport = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
@@ -45,6 +44,7 @@
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.labelTypeOfStand = new System.Windows.Forms.Label();
+            this.textBoxForCondition = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // buttonConnect
@@ -72,19 +72,6 @@
             this.buttonInformation.Text = "Информация";
             this.buttonInformation.UseVisualStyleBackColor = true;
             this.buttonInformation.Click += new System.EventHandler(this.buttonInformation_Click);
-            // 
-            // buttonCondition
-            // 
-            this.buttonCondition.BackColor = System.Drawing.Color.Red;
-            this.buttonCondition.Enabled = false;
-            this.buttonCondition.Font = new System.Drawing.Font("Times New Roman", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.buttonCondition.ForeColor = System.Drawing.Color.Black;
-            this.buttonCondition.Location = new System.Drawing.Point(10, 440);
-            this.buttonCondition.Name = "buttonCondition";
-            this.buttonCondition.Size = new System.Drawing.Size(275, 70);
-            this.buttonCondition.TabIndex = 3;
-            this.buttonCondition.Text = "Нет подключения";
-            this.buttonCondition.UseVisualStyleBackColor = false;
             // 
             // buttonLoad
             // 
@@ -179,11 +166,24 @@
             // labelTypeOfStand
             // 
             this.labelTypeOfStand.AutoSize = true;
-            this.labelTypeOfStand.Location = new System.Drawing.Point(401, 61);
+            this.labelTypeOfStand.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.labelTypeOfStand.Location = new System.Drawing.Point(314, 61);
             this.labelTypeOfStand.Name = "labelTypeOfStand";
-            this.labelTypeOfStand.Size = new System.Drawing.Size(0, 21);
+            this.labelTypeOfStand.Size = new System.Drawing.Size(2, 23);
             this.labelTypeOfStand.TabIndex = 13;
             this.labelTypeOfStand.Visible = false;
+            // 
+            // textBoxForCondition
+            // 
+            this.textBoxForCondition.BackColor = System.Drawing.Color.White;
+            this.textBoxForCondition.ForeColor = System.Drawing.Color.Black;
+            this.textBoxForCondition.Location = new System.Drawing.Point(12, 481);
+            this.textBoxForCondition.Name = "textBoxForCondition";
+            this.textBoxForCondition.ReadOnly = true;
+            this.textBoxForCondition.Size = new System.Drawing.Size(273, 29);
+            this.textBoxForCondition.TabIndex = 14;
+            this.textBoxForCondition.Text = "Нет подключения";
+            this.textBoxForCondition.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // MainForm
             // 
@@ -191,6 +191,7 @@
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(884, 521);
+            this.Controls.Add(this.textBoxForCondition);
             this.Controls.Add(this.labelTypeOfStand);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textBox3);
@@ -200,7 +201,6 @@
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.buttonGenerateReport);
             this.Controls.Add(this.buttonLoad);
-            this.Controls.Add(this.buttonCondition);
             this.Controls.Add(this.buttonInformation);
             this.Controls.Add(this.buttonConnect);
             this.Font = new System.Drawing.Font("Times New Roman", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
@@ -219,7 +219,6 @@
         private System.Windows.Forms.Button buttonConnect;
         private System.IO.Ports.SerialPort connectPort;
         private System.Windows.Forms.Button buttonInformation;
-        private System.Windows.Forms.Button buttonCondition;
         private System.Windows.Forms.Button buttonLoad;
         private System.Windows.Forms.Button buttonGenerateReport;
         private System.Windows.Forms.TextBox textBox1;
@@ -231,6 +230,7 @@
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Label labelTypeOfStand;
+        private System.Windows.Forms.TextBox textBoxForCondition;
     }
 }
 

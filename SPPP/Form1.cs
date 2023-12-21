@@ -17,32 +17,32 @@ namespace SPPP
 {
     public partial class MainForm : Form
     {
-        private List<string> listPorts; //Лист портов
         public string startWord = "Start"; // Стартовое слово, для инициализации платы и определения типа стенда
         public string typeOfStand; // Запоминаем тип стенда, для выбора конкретного шаблона
         bool isConnected = false; // Флаг проверки соединения
-        private bool isLoadData;
-        private bool isReadingData;
-        private byte[] sensorData = new byte[2];
-        private byte startMarker = 0xA0;
-        private byte endMarker = 0xC0;
+        private bool isLoadData; // Флаг загрузки данных    
+        private bool isReadingData; // Флаг чтения данных
+        private byte[] sensorData = new byte[2]; // Инициализация массива байтов
+        private byte startMarker = 0xA0; // Стартовый маркер для приема данных 
+        private byte endMarker = 0xC0; // Конечный маркер для приема данных
 
         public MainForm()
         {
             InitializeComponent();
-            timer1 = new System.Windows.Forms.Timer();
-            timer1.Interval = 2000;
-            timer1.Tick += timerTick;
+            timer1 = new System.Windows.Forms.Timer(); // Инициализация таймера
+            timer1.Interval = 2000; // Время срабатывани
+            timer1.Tick += timerTick; // Тикаем до времени срабатывания
+            textBoxForCondition.Enabled = false;
         }
 
         private void timerTick(object sender, EventArgs e)
         {
-            timer1.Stop();
-            isLoadData = false;
-            isReadingData = false;
-            disconnectFromArduino();
-            condition();
-            MessageBox.Show("Превышено время ожидания пакета, проверьте соединение со стендом");
+            timer1.Stop(); // Стоп таймер
+            isLoadData = false; // Обнуляем флаг приема данных
+            isReadingData = false; // Обнуляем флаг чтения данных
+            disconnectFromArduino(); // Отключаемся от платы
+            condition(); // Возвращаемся в начальное меню
+            MessageBox.Show("Проверьте подключение стенда", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         // Кнопка подключиться
@@ -50,7 +50,7 @@ namespace SPPP
         {
             if (!isConnected) // Проверка флага, если false, подключаемся к плате управления, если true отключаемся
             {
-                connectOrDisconnectToArduino(); // Функция подключения / отключения от платы управления
+                connectorDisconnectToArduino(); // Функция подключения / отключения от платы управления
                 condition(); // Функция изменения цвета кнопки состояние подключения
             }
             else
@@ -61,36 +61,35 @@ namespace SPPP
         }
 
         // Функция подключения / отключения от платы управления
-        private void connectOrDisconnectToArduino()
+        private void connectorDisconnectToArduino() 
         {
-            if (!isConnected)
+            if (!isConnected) // Проверка флага на отсутствующее подключение
             {
-                string arduinoPort = findPortAndDeterminningTypeOfStand(); // Записываем порт, к которому подключена плата упраления
-                if (!string.IsNullOrEmpty(arduinoPort)) // Если плата управления обнаружена, то подлючаемся
+                string arduinoPort = findPortAndDetermineTypeOfStand(); // Определяем порт и тип стенда
+                if (!string.IsNullOrEmpty(arduinoPort))
                 {
-                    isConnected = true; // Меняем флаг подключения
-                    connectPort.PortName = arduinoPort; // Присваем название порта
+                    isConnected = true; // Флаг - соединение установлено
+                    connectPort.PortName = arduinoPort; // Присваиваем в название порта, найденный порт
                     connectPort.DataReceived += new SerialDataReceivedEventHandler(dataReceivedHandler); // Делегат
-                    connectPort.Open(); // Открываем порт
-                    buttonConnect.Text = "Отключиться"; // Меняем текст кнопки
+                    connectPort.Open(); // Открываем порт   
+                    buttonConnect.Text = "Отключиться"; // Меняем статус кнопки на "отключиться"
                 }
-                // Если плата управления не обнаружена
                 else
                 {
-                    MessageBox.Show("Плата управления не обнаружена. Убедитесь, что она подключена.");
+                    MessageBox.Show("Проверьте подключение стенда, выполните перезагрузку устройства.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    System.Windows.Forms.Application.Restart(); // Принудительно перезагружаем интерфейс
                 }
             }
-            // Если флаг подключения true, отключаемся
             else
             {
-                disconnectFromArduino(); // Функция для отключения от платы управления
+                disconnectFromArduino(); // Отлючаемся от платы, если были подключены
             }
         }
 
         // Функция отключения от платы управления
         private void disconnectFromArduino()
         {
-            if (isConnected)
+            if (isConnected) // Проверяем флаг
             {
                 isConnected = false; // Меняем флаг
                 connectPort.Close(); // Закрываем порт
@@ -100,175 +99,178 @@ namespace SPPP
                 textBox3.Text = null; // Обнуляем текст бокс
             }
         }
-
-        private string findPortAndDeterminningTypeOfStand()
+        // Функция для получения названия порта и определение типа стенда
+        private string findPortAndDetermineTypeOfStand()
         {
-            listPorts = SerialPort.GetPortNames().ToList();
+            List<string> listPorts = SerialPort.GetPortNames().ToList(); // Заполяем массив листов доступными портами
             try
             {
                 foreach (string port in listPorts)
                 {
-                    connectPort.PortName = port;
-                    connectPort.Open();
+                    connectPort.PortName = port; // Присваем в название порта доступной порт
+                    connectPort.Open(); // Открываем порт
                     if (port != "COM1")
                     {
                         for (int i = 0; i < 20; i++)
                         {
-                            Thread.Sleep(1000);
-                            connectPort.WriteLine(startWord);
-                            if (connectPort.BytesToRead > 0)
+                            connectPort.WriteLine(startWord); // Отправляем стартовое слово на МК
+                            if (connectPort.BytesToRead > 0) // Если получили в ответ хоть что-то, то заходим
                             {
-                                string flag = connectPort.ReadLine();
-                                typeOfStand = flag;
-                                if (flag.Trim().Equals("0"))
+                                string flag = connectPort.ReadLine(); // Считываем принятое значение
+                                typeOfStand = flag.Trim(); // Присваем тип стенда в глобальную переменную
+                                if (flag.Trim().Equals("0")) // СРПП
                                 {
-                                    label1.Visible = true;
-                                    label2.Visible = true;
-                                    label3.Visible = true;
-                                    label1.Text = "Серийный номер изделия:";
-                                    label2.Text = "Продолжительность испытания:";
-                                    label3.Text = "Количество циклов испытания:";
-                                    textBox1.Visible = true;
-                                    textBox2.Visible = true;
-                                    textBox3.Visible = true;
-                                    labelTypeOfStand.Text = "СРПП";
+                                    label1.Visible = true; // Включаем отображение
+                                    label2.Visible = true; // Включаем отображение
+                                    label3.Visible = true; // Включаем отображение
+                                    label1.Text = "Серийный номер изделия:"; // Меняем текст лейбл1
+                                    label2.Text = "Продолжительность испытания:"; // Меняем текст лейбл2
+                                    label3.Text = "Количество циклов испытания:"; // Меняем текст лейбл3
+                                    textBox1.Visible = true; // Включаем отображение
+                                    textBox2.Visible = true; // Включаем отображение
+                                    textBox3.Visible = true; // Включаем отображение
+                                    labelTypeOfStand.Text = "Подключенный стенд: СРПП"; // Отображаем тип стенда
                                 }
-                                else if (flag.Trim().Equals("1"))
+                                else if (flag.Trim().Equals("1")) // СППП
                                 {
-                                    label1.Visible = true;
-                                    label2.Visible = true;
-                                    label3.Visible = true;
-                                    label1.Text = "Серийный номер изделия:";
-                                    label2.Text = "Продолжительность испытания:";
-                                    label3.Text = "Количество циклов испытания:";
-                                    textBox1.Visible = true;
-                                    textBox2.Visible = true;
-                                    textBox3.Visible = true;
-                                    labelTypeOfStand.Text = "СППП";
+                                    label1.Visible = true; // Включаем отображение
+                                    label2.Visible = true; // Включаем отображение
+                                    label3.Visible = true; // Включаем отображение
+                                    label1.Text = "Серийный номер изделия:"; // Меняем текст лейбл1
+                                    label2.Text = "Продолжительность испытания:"; // Меняем текст лейбл2 
+                                    label3.Text = "Количество циклов испытания:"; // Меняем текст лейбл3
+                                    textBox1.Visible = true; // Включаем отображение
+                                    textBox2.Visible = true; // Включаем отображение
+                                    textBox3.Visible = true; // Включаем отображение
+                                    labelTypeOfStand.Text = "Подключенный стенд: СППП"; // Отображаем тип стенда
                                 }
-                                else if (flag.Trim().Equals("2"))
+                                else if (flag.Trim().Equals("2")) // СРСП
                                 {
-                                    label1.Visible = true;
-                                    label2.Visible = true;
-                                    label3.Visible = true;
-                                    label1.Text = "Серийный номер изделия:";
-                                    label2.Text = "Продолжительность испытания:";
-                                    label3.Text = "Количество циклов испытания:";
-                                    textBox1.Visible = true;
-                                    textBox2.Visible = true;
-                                    textBox3.Visible = true;
-                                    labelTypeOfStand.Text = "СРСП";
+                                    label1.Visible = true; // Включаем отображение
+                                    label2.Visible = true; // Включаем отображение
+                                    label3.Visible = true; // Включаем отображение
+                                    label1.Text = "Серийный номер изделия:"; // Меняем текст
+                                    label2.Text = "Продолжительность испытания:"; // Меняем текст
+                                    label3.Text = "Количество циклов испытания:"; // Меняем текст
+                                    textBox1.Visible = true; // Включаем отображение
+                                    textBox2.Visible = true; // Включаем отображение
+                                    textBox3.Visible = true; // Включаем отображение
+                                    labelTypeOfStand.Text = "Подключенный стенд: СРСП"; // Отображаем тип стенда
                                 }
-                                else if (flag.Trim().Equals("3"))
+                                else if (flag.Trim().Equals("3")) // СПСП
                                 {
-                                    label1.Visible = true;
-                                    label2.Visible = true;
-                                    label3.Visible = true;
-                                    label1.Text = "Серийный номер изделия:";
-                                    label2.Text = "Продолжительность испытания:";
-                                    label3.Text = "Количество циклов испытания:";
-                                    textBox1.Visible = true;
-                                    textBox2.Visible = true;
-                                    textBox3.Visible = true;
-                                    labelTypeOfStand.Text = "СПСП";
+                                    label1.Visible = true; // Включаем отображение
+                                    label2.Visible = true; // Включаем отображение
+                                    label3.Visible = true; // Включаем отображение
+                                    label1.Text = "Серийный номер изделия:"; // Меняем текст
+                                    label2.Text = "Продолжительность испытания:"; // Меняем текст
+                                    label3.Text = "Количество циклов испытания:"; // Меняем текст
+                                    textBox1.Visible = true; // Включаем отображение
+                                    textBox2.Visible = true; // Включаем отображение
+                                    textBox3.Visible = true; // Включаем отображение
+                                    labelTypeOfStand.Text = "Подключенный стенд: СПСП"; // Отображаем тип стенда
                                 }
-                                connectPort.Close();
-                                return port;
+                                connectPort.Close(); // Закрываем порт
+                                return port; // Возвращаем значение порта
                             }
                             else
                             {
-                                continue;
+                                continue; // Продолжаем поиск
                             }
                         }
                         return null;
                     }
-                    connectPort.Close();
+                    connectPort.Close(); // Закрываем порт
                 }
             }
-            catch
+            catch (Exception)
             {
-
+                connectPort.Close(); // При возникновении ошибки, закрываем порт
             }
-            return null;
+            return null; 
         }
 
         // Функция для установки состояния видимости кнопок и их активации, в зависимости от флага.
         private void condition()
         {
-            if (isConnected)
+            if (isConnected) // Если подключены
             {
-                buttonCondition.Text = "Успешное подключение"; // Меняем текст кнопки состояния
-                buttonCondition.BackColor = Color.Green; // Меняем цвет кнопки состояния
+                textBoxForCondition.Text = "Успешное подключение"; // Меняем текст кнопки состояния
                 buttonLoad.Visible = true; // Активируем отображение кнопки загрузка
                 buttonLoad.Enabled = true; // Активируем нажатие на кнопку загрузка
                 //buttonGenerateReport.Visible = true; // Активируем отображение кнопки сформировать отчет
                 //buttonGenerateReport.Enabled = true; // Активируем нажатие на кнопку сформировать отчет
                 buttonInformation.Visible = false; // Деактивируем визуальное отображение кнопки информация
                 buttonInformation.Enabled = false; // Деактивируем нажатие на кнопку информация
-                labelTypeOfStand.Visible = true;
+                labelTypeOfStand.Visible = true; // Включаем отображение типа стенда
+                textBox2.Enabled = false;
+                textBox3.Enabled = false;
             }
             else
             {
-                buttonCondition.Text = "Нет подключения"; // Меняем текст кнопки состояния
-                buttonCondition.BackColor = Color.Red; // Меняем цвет кнопки состояния
+                textBoxForCondition.Text = "Нет подключения"; // Меняем текст кнопки состояния
                 buttonLoad.Visible = false; // Активируем отображение кнопки загрузка 
                 buttonLoad.Enabled = false; // Активируем нажатие на кнопку загрузка
                 buttonGenerateReport.Visible = false; // Активируем отображение кнопки сформировать отчет
                 buttonGenerateReport.Enabled = false; // Активируем нажатие на кнопку сформировать отчет
                 buttonInformation.Visible = true; // Деактивируем визуальное отображение кнопки информация
                 buttonInformation.Enabled = true; // Деактивируем нажатие на кнопку информация
-                label1.Visible = false;
-                label2.Visible = false;
-                label3.Visible = false;
-                textBox1.Visible = false;
-                textBox2.Visible = false;
-                textBox3.Visible = false;
-                labelTypeOfStand.Visible = false;
+                label1.Visible = false; // Выкл. отображения
+                label2.Visible = false; // Выкл. отображения
+                label3.Visible = false; // Выкл. отображения
+                textBox1.Visible = false; // Выкл. отображения
+                textBox2.Visible = false; // Выкл. отображения
+                textBox3.Visible = false; // Выкл. отображения
+                labelTypeOfStand.Visible = false; // Выкл. отображение типа стенда
             }
         }
         //System.InvalidOperationException
         private void dataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
         {
-            if (isLoadData)
+            if (isLoadData) // При значение флага Тру, заходим
             {
                 try
                 {
-                    while (connectPort.BytesToRead > 0)
+                    while (connectPort.BytesToRead > 0) // Пока данные получаем
                     {
-                        byte receivedByte = (byte)connectPort.ReadByte();
+                        byte receivedByte = (byte)connectPort.ReadByte(); // Считываем байты из порта
 
-                        if (!isReadingData && receivedByte == startMarker)
+                        if (!isReadingData && receivedByte == startMarker) // Если данные не получены и получен стартовый флаг
                         {
-                            isReadingData = true;
+                            isReadingData = true; // Меняем флаг чтения данных
 
                             for (int i = 0; i < 2; i++)
                             {
-                                sensorData[i] = (byte)connectPort.ReadByte();
+                                sensorData[i] = (byte)connectPort.ReadByte(); // Считываем пакет
                             }
                         }
-                        else if (isReadingData && receivedByte == endMarker)
+                        else if (isReadingData && receivedByte == endMarker) // Если данные получены и отправлен конечный маркер
                         {
-                            timer1.Stop();
+                            timer1.Stop(); // Останавливаем таймер.
 
-                            string one = sensorData[0].ToString();
-                            string two = sensorData[1].ToString();
-                            int time = int.Parse(one);
+                            string one = sensorData[0].ToString(); // Парсим в стринги
+                            string two = sensorData[1].ToString(); // Парсим в стринги
+                            int time = int.Parse(one); // Парсим в инты
                             int hour = time / 3600;
                             int minute = (time % 3600) / 60;
                             int seconds = time % 60;
 
-                            if (two == "0" || one == "0")
+                            // Проверка значений на нули
+                            if (two == "0" || one == "0") 
                             {
-                                MessageBox.Show("Калибровка не выполнена");
-                                isReadingData = false;
-                                isLoadData = false;
-                                return;
+                                MessageBox.Show("Отсутствует информация о выполненной процедуре", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                isReadingData = false; // Меняем флаг полученния данных
+                                isLoadData = false; // Меняем флаг загрузки данных
+                                return; // Принудительно останавливаем.
                             }
-                            MessageBox.Show("Данные успешно получены");
 
-                            textBox1.Invoke(new System.Action(() =>
+                            // Выводим ошибку на экран
+                            MessageBox.Show("Данные успешно получены", "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+
+                            // Поток для вывода данных
+                            textBox1.Invoke(new System.Action(() => 
                             {
-                                buttonCondition.Text = "Данные получены";
+                                textBoxForCondition.Text = "Данные получены";
                                 buttonLoad.Visible = true;
                                 buttonLoad.Enabled = true;
                                 textBox2.Text = hour + ":" + minute + ":" + seconds;
@@ -276,18 +278,21 @@ namespace SPPP
                                 buttonGenerateReport.Visible = true;
                                 buttonGenerateReport.Enabled = true;
                             }));
-                            isReadingData = false;
-                            isLoadData = false;
+                            isReadingData = false; // Меняем флаг получения данных
+                            isLoadData = false; // Меняем флаг загрузки данных
                         }
-                        else if (isReadingData && receivedByte != endMarker)
+                        // Если данные получены, но конечный маркер отсутствует, то выдаем ошибку
+                        else if (isReadingData && receivedByte != endMarker) 
                         {
-                            MessageBox.Show("Данные повреждены.");
+                            // Выводим ошибку на экран
+                            MessageBox.Show("Данные повреждены.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
                 }
-                catch (InvalidOperationException)
+                catch (InvalidOperationException) // Исключение при отсутствии подключения
                 {
-                    MessageBox.Show("Потеряно соединение.");
+                    // Выводим ошибку на экран
+                    MessageBox.Show("Потеряно соединение.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -295,7 +300,8 @@ namespace SPPP
         // Кнопка информация
         private void buttonInformation_Click(object sender, EventArgs e)
         {
-            string message = "Прикладное программное обеспечение СППП\n" +
+            string message = "Прикладное программное обеспечение\n" +
+                "для формирования отчетной документации\n" +
                 "Версия ППО: 1.0 от 20.12.2023\n" +
                 "Разработчик: ЮЗГУ НИЛ 'МиР'\n" +
                 "Номер телефона: +7(4712)22-26-26\n" +
@@ -306,51 +312,57 @@ namespace SPPP
 
         private void buttonLoad_Click(object sender, EventArgs e)
         {
-            if (!isLoadData)
+            if (!isLoadData) // Проверяем флаг
             {
-                if (!connectPort.IsOpen)
+                if (!connectPort.IsOpen) // Проверяем порт, что он открыт и доступен
                 {
-                    MessageBox.Show("Проверьте подключения стенда.");
-                    disconnectFromArduino();
-                    condition();
+                    // Выводим ошибку на экран
+                    MessageBox.Show("Проверьте подключения стенда.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    disconnectFromArduino(); // Отключаемся от МК
+                    condition(); // Возвращаемся к стартовому виду интерфейса
                 }
                 else
                 {
-                    connectPort.WriteLine("Load");
-                    isLoadData = true;
-                    timer1.Start();
+                    connectPort.WriteLine("Load"); // Отпрляем флаг на МК
+                    isLoadData = true; //  Меняем флаг
+                    timer1.Start(); // Запускаем таймер
                 }
             }
         }
 
         private void buttonGenerateReport_Click(object sender, EventArgs e)
         {
-            if (!connectPort.IsOpen)
+            if (!connectPort.IsOpen) // Если порт закрыт и недоступен
             {
-                MessageBox.Show("Проверьте подключения стенда.");
-                disconnectFromArduino();
-                condition();
+                // Выводим ошибку на экран
+                MessageBox.Show("Проверьте подключения стенда.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                disconnectFromArduino(); // Отключаемся от МК
+                condition(); // Возвращаемся к стартовому виду интерфейса
             }
-            else if (string.IsNullOrEmpty(textBox1.Text))
+            else if (string.IsNullOrEmpty(textBox1.Text)) // Если поле серийный номер = null
             {
-                MessageBox.Show("Введите серийный номер изделия.");
+                // Выводим ошибку на экран
+                MessageBox.Show("Введите серийный номер изделия.", "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             else
             {
-                saveFileDialog1 = new SaveFileDialog();
-                saveFileDialog1.Filter = "Word document|*.docx";
-                saveFileDialog1.Title = "Выберите путь сохранения";
-                if (DialogResult.OK == saveFileDialog1.ShowDialog())
+                saveFileDialog1 = new SaveFileDialog(); // Инициализация сохранения файла
+                saveFileDialog1.Filter = "Word document|*.docx";  // Фильтр для ворд файлов
+                saveFileDialog1.Title = "Выберите путь сохранения"; // Пусть сохранения указываем
+                if (DialogResult.OK == saveFileDialog1.ShowDialog()) // Показываем меню, для выбора пути сохранения файла
                 {
-                    string location = saveFileDialog1.FileName;
-                    WordHelper helper = new WordHelper();
+                    string location = saveFileDialog1.FileName;  // Присваиваем имя файла
+                    WordHelper helper = new WordHelper(); // Инициализация класса
                     if (helper.WordTemplate(DateTime.Now.ToString(), textBox1.Text, textBox2.Text, textBox3.Text, location, typeOfStand))
                     {
-                        MessageBox.Show("Отчёт сформирован");
+                        // Выводим уведомление, что все прошло успешно
+                        MessageBox.Show("Отчёт сформирован", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                        textBoxForCondition.Text = "Отчет сформирован"; // Выводим статус.
                     }
                     else
                     {
-                        MessageBox.Show("Что-то пошло не так. Повторите попытку.");
+                        // Выводим ошибку, если появилась ошибки при сохранении, создании или редактирование файла.
+                        MessageBox.Show("Что-то пошло не так. Повторите попытку.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
