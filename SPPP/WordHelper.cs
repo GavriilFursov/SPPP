@@ -14,7 +14,7 @@ namespace SPPP
         public bool WordTemplate(string date, string model, string durationOfTheTests, string numberOfTestCyclec, string location, string typeOfStand)
         {
             Word.Document doc = null;
-            if (typeOfStand.Trim().Equals("0"))
+            if (typeOfStand.Trim().Equals("0") || typeOfStand.Trim().Equals("2"))
             {
                 string patch = System.Windows.Forms.Application.StartupPath.ToString() + "\\ШаблонСРПП.docx";
                 try
