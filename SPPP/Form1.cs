@@ -12,7 +12,6 @@ using System.Management;
 using System.Threading;
 using Microsoft.Office.Interop.Word;
 using System.Timers;
-using System.Net.NetworkInformation;
 
 namespace SPPP
 {
@@ -23,20 +22,19 @@ namespace SPPP
         bool isConnected = false; // Флаг проверки соединения
         private bool isLoadData; // Флаг загрузки данных    
         private bool isReadingData; // Флаг чтения данных
-        private string[] sensorData = new string[2]; // Инициализация массива байтов
-        private string startMarker = "$"; // Стартовый маркер для приема данных 
-        private string endMarker = "%"; // Конечный маркер для приема данных
+        private byte[] sensorData = new byte[2]; // Инициализация массива байтов
+        private byte startMarker = 0xA0; // Стартовый маркер для приема данных 
+        private byte endMarker = 0xC0; // Конечный маркер для приема данных
 
         public MainForm()
         {
-            InitializeComponent(); // Инициализация
+            InitializeComponent();
             timer1 = new System.Windows.Forms.Timer(); // Инициализация таймера
             timer1.Interval = 2000; // Время срабатывани
             timer1.Tick += timerTick; // Тикаем до времени срабатывания
-            textBoxForCondition.Enabled = false; // Делаем текстбокс недоступным
+            textBoxForCondition.Enabled = false;
         }
 
-        // Функция для запуска таймера
         private void timerTick(object sender, EventArgs e)
         {
             timer1.Stop(); // Стоп таймер
@@ -44,10 +42,13 @@ namespace SPPP
             isReadingData = false; // Обнуляем флаг чтения данных
             disconnectFromArduino(); // Отключаемся от платы
             condition(); // Возвращаемся в начальное меню
-            DialogResult dialogResult = MessageBox.Show("Проверьте подключение стенда, выполните перезагрузку устройства.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            if (dialogResult == DialogResult.OK) 
+            if (connectPort.IsOpen)
             {
-                System.Windows.Forms.Application.Restart(); // Перезагружаем интерфейс, если жмем ок
+                DialogResult dialogResult = MessageBox.Show("Проверьте подключение стенда.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (dialogResult == DialogResult.OK)
+                {
+                    System.Windows.Forms.Application.Restart(); // Перезагружаем интерфейс, если жмем ок
+                }
             }
         }
 
@@ -67,23 +68,26 @@ namespace SPPP
         }
 
         // Функция подключения / отключения от платы управления
-        private void connectorDisconnectToArduino() 
+        private void connectorDisconnectToArduino()
         {
             if (!isConnected) // Проверка флага на отсутствующее подключение
             {
                 string arduinoPort = findPortAndDetermineTypeOfStand(); // Определяем порт и тип стенда
                 if (!string.IsNullOrEmpty(arduinoPort))
                 {
+                    timer1.Stop();
                     isConnected = true; // Флаг - соединение установлено
                     connectPort.PortName = arduinoPort; // Присваиваем в название порта, найденный порт
                     connectPort.DataReceived += new SerialDataReceivedEventHandler(dataReceivedHandler); // Делегат
                     connectPort.Open(); // Открываем порт   
-                    timer1.Stop(); // Останавливаем таймер
                     buttonConnect.Text = "Отключиться"; // Меняем статус кнопки на "отключиться"
                 }
                 else
                 {
-                    MessageBox.Show("Проверьте подключение стенда, выполните перезагрузку устройства.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (!connectPort.IsOpen)
+                    {
+                        MessageBox.Show("Проверьте подключение стенда, выполните перезагрузку устройства.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
             else
@@ -117,14 +121,14 @@ namespace SPPP
                     connectPort.Open(); // Открываем порт
                     if (port != "COM1")
                     {
-                        for (int i = 0; i < 20; i++)
+                        for (int i = 0; i < 10; i++)
                         {
                             connectPort.WriteLine(startWord); // Отправляем стартовое слово на МК
-                            Thread.Sleep(200);
                             timer1.Start();
                             if (connectPort.BytesToRead > 0) // Если получили в ответ хоть что-то, то заходим
                             {
                                 string flag = connectPort.ReadLine(); // Считываем принятое значение
+                                Thread.Sleep(200);
                                 typeOfStand = flag.Trim(); // Присваем тип стенда в глобальную переменную
                                 if (flag.Trim().Equals("0")) // СРПП
                                 {
@@ -157,7 +161,7 @@ namespace SPPP
                                     label1.Visible = true; // Включаем отображение
                                     label2.Visible = true; // Включаем отображение
                                     label3.Visible = true; // Включаем отображение
-                                    label1.Text = "Серийный номер изделия:"; // Меняем текст
+                                    label1.Text = "Серийный номер изделия:"; // Меняем текст   
                                     label2.Text = "Продолжительность испытания:"; // Меняем текст
                                     label3.Text = "Количество циклов испытания:"; // Меняем текст
                                     textBox1.Visible = true; // Включаем отображение
@@ -178,6 +182,10 @@ namespace SPPP
                                     textBox3.Visible = true; // Включаем отображение
                                     labelTypeOfStand.Text = "Подключенный стенд: СПСП"; // Отображаем тип стенда
                                 }
+                                else
+                                {
+                                    break;
+                                }
                                 connectPort.Close(); // Закрываем порт
                                 return port; // Возвращаем значение порта
                             }
@@ -195,25 +203,8 @@ namespace SPPP
             {
                 connectPort.Close(); // При возникновении ошибки, закрываем порт
             }
-            return null; 
+            return null;
         }
-
-        // Добавляем нули в поле время.
-        private string addZero(int input)
-        {
-            String output = "";
-            if (input >= 10)
-            {
-                output += input;
-            }
-            else
-            {
-                output += "0";
-                output += input;
-            }
-            return output;
-        }
-
 
         // Функция для установки состояния видимости кнопок и их активации, в зависимости от флага.
         private void condition()
@@ -228,8 +219,8 @@ namespace SPPP
                 buttonInformation.Visible = false; // Деактивируем визуальное отображение кнопки информация
                 buttonInformation.Enabled = false; // Деактивируем нажатие на кнопку информация
                 labelTypeOfStand.Visible = true; // Включаем отображение типа стенда
-                textBox2.Enabled = false; // Закрываем доступ к редактированию
-                textBox3.Enabled = false; // Закрываем доступ к редактированию
+                textBox2.Enabled = false;
+                textBox3.Enabled = false;
             }
             else
             {
@@ -258,30 +249,30 @@ namespace SPPP
                 {
                     while (connectPort.BytesToRead > 0) // Пока данные получаем
                     {
-                        string receivedByte = connectPort.ReadExisting(); // Считываем байты из потока
+                        byte receivedByte = (byte)connectPort.ReadByte(); // Считываем байты из порта
 
-                        if (!isReadingData && receivedByte.Trim().Equals(startMarker)) // Если данные не получены и получен стартовый флаг
+                        if (!isReadingData && receivedByte == startMarker) // Если данные не получены и получен стартовый флаг
                         {
                             isReadingData = true; // Меняем флаг чтения данных
 
                             for (int i = 0; i < 2; i++)
                             {
-                                Thread.Sleep(100); // Выдержка 100 мс.
-                                sensorData[i] = connectPort.ReadExisting(); // Считываем пакет
+                                sensorData[i] = (byte)connectPort.ReadByte(); // Считываем пакет
                             }
                         }
-                        else if (isReadingData && receivedByte.Trim().Equals(endMarker)) // Если данные получены и отправлен конечный маркер
+                        else if (isReadingData && receivedByte == endMarker) // Если данные получены и отправлен конечный маркер
                         {
                             timer1.Stop(); // Останавливаем таймер.
+
                             string one = sensorData[0].ToString(); // Парсим в стринги
                             string two = sensorData[1].ToString(); // Парсим в стринги
                             int time = int.Parse(one); // Парсим в инты
-                            int hour = time / 3600; // Получаем часы
-                            int minute = (time % 3600) / 60; // Получаем минуты
-                            int seconds = time % 60; // Получаем секунды
+                            int hour = time / 3600;
+                            int minute = (time % 3600) / 60;
+                            int seconds = time % 60;
 
                             // Проверка значений на нули
-                            if (one.Trim().Equals("0") || two.Trim().Equals("0"))
+                            if (two == "0" || one == "0")
                             {
                                 MessageBox.Show("Отсутствует информация о выполненной процедуре.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                 isReadingData = false; // Меняем флаг полученния данных
@@ -290,24 +281,24 @@ namespace SPPP
                             }
 
                             // Выводим ошибку на экран
-                            MessageBox.Show("Данные успешно получены", "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                            MessageBox.Show("Данные успешно получены.", "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
 
                             // Поток для вывода данных
                             textBox1.Invoke(new System.Action(() =>
                             {
-                                textBoxForCondition.Text = "Данные получены"; // Меняем текст
-                                buttonLoad.Visible = true; 
+                                textBoxForCondition.Text = "Данные получены";
+                                buttonLoad.Visible = true;
                                 buttonLoad.Enabled = true;
-                                textBox2.Text = addZero(hour) + ":" + addZero(minute) + ":" + addZero(seconds); // Выводим время
-                                textBox3.Text = two; // Выводим циклы
-                                buttonGenerateReport.Visible = true; // Отображаем
-                                buttonGenerateReport.Enabled = true; // Отображаем
+                                textBox2.Text = hour + ":" + minute + ":" + seconds;
+                                textBox3.Text = two;
+                                buttonGenerateReport.Visible = true;
+                                buttonGenerateReport.Enabled = true;
                             }));
                             isReadingData = false; // Меняем флаг получения данных
                             isLoadData = false; // Меняем флаг загрузки данных
                         }
                         // Если данные получены, но конечный маркер отсутствует, то выдаем ошибку
-                        else if (isReadingData && receivedByte.Trim().Equals(endMarker))
+                        else if (isReadingData && receivedByte != endMarker)
                         {
                             // Выводим ошибку на экран
                             MessageBox.Show("Данные повреждены.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -335,7 +326,6 @@ namespace SPPP
             MessageBox.Show(message, "Информация", MessageBoxButtons.OK, MessageBoxIcon.Question);
         }
 
-        // Функция для полученния данных с МК
         private void buttonLoad_Click(object sender, EventArgs e)
         {
             if (!isLoadData) // Проверяем флаг
@@ -382,7 +372,7 @@ namespace SPPP
                     if (helper.WordTemplate(DateTime.Now.ToString(), textBox1.Text, textBox2.Text, textBox3.Text, location, typeOfStand))
                     {
                         // Выводим уведомление, что все прошло успешно
-                        MessageBox.Show("Отчёт сформирован", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                        MessageBox.Show("Отчёт сформирован.", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                         textBoxForCondition.Text = "Отчет сформирован"; // Выводим статус.
                     }
                     else
